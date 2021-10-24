@@ -5,19 +5,20 @@ import java.util.Iterator;
 import java.util.NoSuchElementException;
 
 public class RandomizedQueue<Item> implements Iterable<Item> {
+    private static final int INITIAL_SIZE = 2;
     private Item[] queue;
     private int index;
 
     // construct an empty randomized queue
     public RandomizedQueue() {
-        queue = (Item[]) new Object[10];
+        queue = (Item[]) new Object[INITIAL_SIZE];
         index = 0;
     }
 
-    private void resizeQueue() {
-        Item[] largerQueue = (Item[]) new Object[queue.length * 2];
-        System.arraycopy(queue, 0, largerQueue, 0, queue.length);
-        queue = largerQueue;
+    private void resizeQueue(int length) {
+        Item[] newQueue = (Item[]) new Object[length];
+        System.arraycopy(queue, 0, newQueue, 0, index);
+        queue = newQueue;
     }
 
     // is the randomized queue empty?
@@ -35,8 +36,8 @@ public class RandomizedQueue<Item> implements Iterable<Item> {
         if (item == null) {
             throw new IllegalArgumentException("Item cannot be null");
         }
-        if (index > queue.length - 1) {
-            resizeQueue();
+        if (index >= queue.length) {
+            resizeQueue(queue.length * 2);
         }
         queue[index++] = item;
     }
@@ -48,13 +49,16 @@ public class RandomizedQueue<Item> implements Iterable<Item> {
         }
         int removeIndex = StdRandom.uniform(index);
         Item toReturn = queue[removeIndex];
-        System.arraycopy(queue, removeIndex + 1, queue, removeIndex, (--index - removeIndex));
+        queue[removeIndex] = queue[--index];
+        if (index < queue.length / 4) {
+            resizeQueue(queue.length / 2);
+        }
         return toReturn;
     }
 
     // return a random item (but do not remove it)
     public Item sample() {
-        if (size() == 0) {
+        if (index < 1) {
             throw new NoSuchElementException("Queue is empty");
         }
         return queue[StdRandom.uniform(index)];
@@ -65,13 +69,13 @@ public class RandomizedQueue<Item> implements Iterable<Item> {
         return new Iterator<Item>() {
             @Override
             public boolean hasNext() {
-                return size() > 0;
+                return index > 0;
             }
 
             @Override
             public Item next() {
                 if (size() == 0) {
-                    throw new NoSuchElementException("No elements");
+                    throw new NoSuchElementException("Queue is empty");
                 }
                 return dequeue();
             }
@@ -86,7 +90,7 @@ public class RandomizedQueue<Item> implements Iterable<Item> {
         stringRandomizedQueue.enqueue("orange");
         StdOut.printf("Size expected: 3, actual: %d\n", stringRandomizedQueue.size());
         StdOut.printf("IsEmpty expected: false, actual: %b\n", stringRandomizedQueue.isEmpty());
-        StdOut.printf("Same element returned: %s\n", stringRandomizedQueue.sample());
+        StdOut.printf("Sample element returned: %s\n", stringRandomizedQueue.sample());
         StdOut.printf("Dequeue element returned: %s\n", stringRandomizedQueue.dequeue());
         StdOut.printf("Size expected: 2, actual: %b\n", stringRandomizedQueue.size());
         for (String s : stringRandomizedQueue) {

@@ -4,23 +4,20 @@ import java.util.Iterator;
 import java.util.NoSuchElementException;
 
 public class Deque<Item> implements Iterable<Item> {
-    private static final int INITIAL_SIZE = 10;
+    private static final int INITIAL_SIZE = 2;
     private Item[] queue;
-    private int queueSize;
     private int index;
 
     // construct an empty deque
     public Deque() {
-        queueSize = INITIAL_SIZE;
-        queue = (Item[]) new Object[queueSize];
+        queue = (Item[]) new Object[INITIAL_SIZE];
         index = 0;
     }
 
-    private void resizeQueue() {
-        queueSize *= 2;
-        Item[] largerQueue = (Item[]) new Object[queueSize];
-        System.arraycopy(queue, 0, largerQueue, 0, queue.length);
-        queue = largerQueue;
+    private void resizeQueue(int length) {
+        Item[] newQueue = (Item[]) new Object[length];
+        System.arraycopy(queue, 0, newQueue, 0, index);
+        queue = newQueue;
     }
 
     // is the deque empty?
@@ -38,8 +35,8 @@ public class Deque<Item> implements Iterable<Item> {
         if (item == null) {
             throw new IllegalArgumentException("Item cannot be null");
         }
-        if (index >= queueSize) {
-            resizeQueue();
+        if (index >= queue.length) {
+            resizeQueue(queue.length * 2);
         }
         System.arraycopy(queue, 0, queue, 1, index);
         queue[0] = item;
@@ -51,8 +48,8 @@ public class Deque<Item> implements Iterable<Item> {
         if (item == null) {
             throw new IllegalArgumentException("Item cannot be null");
         }
-        if (index >= queueSize - 1) {
-            resizeQueue();
+        if (index >= queue.length) {
+            resizeQueue(queue.length * 2);
         }
         queue[index++] = item;
     }
@@ -61,6 +58,9 @@ public class Deque<Item> implements Iterable<Item> {
     public Item removeFirst() {
         if (size() == 0) {
             throw new NoSuchElementException("Deque is empty");
+        }
+        if (index < queue.length / 4) {
+            resizeQueue(queue.length / 2);
         }
         Item item = queue[0];
         index--;
@@ -72,6 +72,9 @@ public class Deque<Item> implements Iterable<Item> {
     public Item removeLast() {
         if (size() == 0) {
             throw new NoSuchElementException("Deque is empty");
+        }
+        if (index < queue.length / 4) {
+            resizeQueue(queue.length / 2);
         }
         return queue[--index];
     }
